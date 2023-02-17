@@ -9,7 +9,7 @@ require (
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/docker/go-units v0.4.0
 	github.com/giantswarm/crd-docs-generator v0.7.1
-	github.com/google/uuid v1.2.0
+	github.com/google/uuid v1.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.20.1
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
@@ -21,10 +21,10 @@ require (
 	github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
-	golang.org/x/sys v0.2.0
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
-	google.golang.org/grpc v1.47.0
-	google.golang.org/protobuf v1.28.0
+	golang.org/x/sys v0.4.0
+	golang.org/x/term v0.4.0
+	google.golang.org/grpc v1.53.0
+	google.golang.org/protobuf v1.28.1
 	k8s.io/api v0.25.4
 	k8s.io/apiextensions-apiserver v0.25.0
 	k8s.io/apimachinery v0.25.4
@@ -43,13 +43,13 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.1
 	github.com/kr/pretty v0.3.1
 	github.com/moby/moby v20.10.20+incompatible
-	github.com/prometheus/client_golang v1.12.2
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 )
 
 require (
-	cloud.google.com/go v0.97.0 // indirect
+	cloud.google.com/go/compute v1.15.1 // indirect
+	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.11.27 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.20 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/crossplane/crossplane-runtime v0.14.1-0.20210713194031-85b19c28ea88 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
@@ -117,6 +117,7 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/prometheus/client_golang v1.12.2 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
@@ -134,14 +135,14 @@ require (
 	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
-	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/oauth2 v0.4.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220502173005-c8bf987b8c21 // indirect
+	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
