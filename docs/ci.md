@@ -7,7 +7,7 @@ description: >
 
 This repository uses GitHub Actions to create a custom Continuous Integration
 (CI) workflow named `Inspektor Gadget CI`. This workflow compiles and uploads
-the Inspektor Gadget CLI, local-gadget and gadget container image and runs their
+the Inspektor Gadget CLI, IG and gadget container image and runs their
 unit and integration tests. In addition, it verifies that the documentation is
 up-to-date and runs a static code analysis using Golang linters.
 
