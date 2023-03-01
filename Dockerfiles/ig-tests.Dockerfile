@@ -1,4 +1,4 @@
-FROM ghcr.io/inspektor-gadget/ig-builder:latest
+FROM ghcr.io/burak-ok/ig-builder:latest
 
 WORKDIR /go/src/github.com/inspektor-gadget/inspektor-gadget/integration/ig/k8s
 

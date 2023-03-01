@@ -60,7 +60,7 @@ argument when deploying to the Kubernetes cluster.
 - Using a locally built container image requires pushing it to a container
 registry, either local or remote. The default registry can be overridden by
 changing the value of the `CONTAINER_REPO` env variable, which defaults to
-`ghcr.io/inspektor-gadget/inspektor-gadget` if not defined.
+`ghcr.io/burak-ok/inspektor-gadget` if not defined.
 - The compilation uses `tools/image-tag` to choose the tag of the container
 image to use according to the branch that you are compiling.
 - If you wish to make changes to traceloop program, update

@@ -1,4 +1,4 @@
-CONTAINER_REPO ?= ghcr.io/inspektor-gadget/inspektor-gadget
+CONTAINER_REPO ?= ghcr.io/burak-ok/inspektor-gadget
 IMAGE_TAG ?= $(shell ../../tools/image-tag branch)
 
 runc-hook: main.go

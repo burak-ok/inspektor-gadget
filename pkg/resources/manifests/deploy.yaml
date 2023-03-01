@@ -111,7 +111,7 @@ spec:
       containers:
       - name: gadget
         terminationMessagePolicy: FallbackToLogsOnError
-        image: "ghcr.io/inspektor-gadget/inspektor-gadget:latest"
+        image: "ghcr.io/burak-ok/inspektor-gadget:latest"
         imagePullPolicy: "Always"
         command: [ "/entrypoint.sh" ]
         lifecycle:
@@ -155,7 +155,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: GADGET_IMAGE
-            value: "ghcr.io/inspektor-gadget/inspektor-gadget"
+            value: "ghcr.io/burak-ok/inspektor-gadget"
           - name: INSPEKTOR_GADGET_VERSION
             value: "latest"
           - name: INSPEKTOR_GADGET_OPTION_HOOK_MODE

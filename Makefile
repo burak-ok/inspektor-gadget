@@ -1,7 +1,7 @@
 TAG := `git describe --tags --always`
 VERSION :=
 
-CONTAINER_REPO ?= ghcr.io/inspektor-gadget/inspektor-gadget
+CONTAINER_REPO ?= ghcr.io/burak-ok/inspektor-gadget
 IMAGE_TAG ?= $(shell ./tools/image-tag branch)
 
 MINIKUBE ?= minikube
@@ -60,7 +60,7 @@ all: build ig
 phony_explicit:
 
 ebpf-objects:
-	docker run --rm --name ebpf-object-builder --user $(shell id -u):$(shell id -g) -v $(shell pwd):/work ghcr.io/inspektor-gadget/inspektor-gadget-ebpf-builder
+	docker run --rm --name ebpf-object-builder --user $(shell id -u):$(shell id -g) -v $(shell pwd):/work ghcr.io/burak-ok/inspektor-gadget-ebpf-builder
 
 ebpf-objects-outside-docker:
 	TARGET=arm64 go generate ./...

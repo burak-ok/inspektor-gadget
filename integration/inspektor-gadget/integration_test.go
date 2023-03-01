@@ -46,7 +46,7 @@ var (
 var (
 	integration = flag.Bool("integration", false, "run integration tests")
 
-	// image such as ghcr.io/inspektor-gadget/inspektor-gadget:latest
+	// image such as ghcr.io/burak-ok/inspektor-gadget:latest
 	image = flag.String("image", "", "gadget container image")
 
 	doNotDeployIG  = flag.Bool("no-deploy-ig", false, "don't deploy Inspektor Gadget")
