@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -44,7 +45,23 @@ func TestTraceDns(t *testing.T) {
 	RunTestSteps(commandsPreTest, t)
 	dnsServer, err := GetTestPodIP(ns, "dnstester")
 	if err != nil {
-		t.Fatalf("failed to get pod ip: %v", err)
+		t.Fatalf("failed to get dnsserver pod ip: %v", err)
+	}
+
+	nslookupCmds := []string{
+		fmt.Sprintf("setuidgid 1000:1111 nslookup -type=a fake.test.com. %s", dnsServer),
+		fmt.Sprintf("setuidgid 1000:1111 nslookup -type=aaaa fake.test.com. %s", dnsServer),
+	}
+
+	// Start the busybox pod so that we can get the IP address of the pod.
+	commands := []*Command{
+		BusyboxPodRepeatCommand(ns, strings.Join(nslookupCmds, " ; ")),
+		WaitUntilTestPodReadyCommand(ns),
+	}
+	RunTestSteps(commands, t)
+	busyBoxIP, err := GetTestPodIP(ns, "test-pod")
+	if err != nil {
+		t.Fatalf("failed to get busybox pod ip: %v", err)
 	}
 
 	traceDNSCmd := &Command{
@@ -63,6 +80,9 @@ func TestTraceDns(t *testing.T) {
 					QType:      "A",
 					Uid:        1000,
 					Gid:        1111,
+					Protocol:   "udp",
+					DstPort:    53,
+					SrcIP:      busyBoxIP,
 				},
 				{
 					Event:      BuildBaseEvent(ns, WithContainerImageName("docker.io/library/busybox:latest", isDockerRuntime)),
@@ -78,6 +98,9 @@ func TestTraceDns(t *testing.T) {
 					Addresses:  []string{"127.0.0.1"},
 					Uid:        1000,
 					Gid:        1111,
+					Protocol:   "udp",
+					SrcPort:    53,
+					DstIP:      busyBoxIP,
 				},
 				{
 					Event:      BuildBaseEvent(ns, WithContainerImageName("docker.io/library/busybox:latest", isDockerRuntime)),
@@ -86,9 +109,12 @@ func TestTraceDns(t *testing.T) {
 					Nameserver: dnsServer,
 					PktType:    "OUTGOING",
 					DNSName:    "fake.test.com.",
-					QType:      "A",
+					QType:      "AAAA",
 					Uid:        1000,
 					Gid:        1111,
+					Protocol:   "udp",
+					DstPort:    53,
+					SrcIP:      busyBoxIP,
 				},
 				{
 					Event:      BuildBaseEvent(ns, WithContainerImageName("docker.io/library/busybox:latest", isDockerRuntime)),
@@ -104,6 +130,9 @@ func TestTraceDns(t *testing.T) {
 					Addresses:  []string{"::1"},
 					Uid:        1000,
 					Gid:        1111,
+					Protocol:   "udp",
+					SrcPort:    53,
+					DstIP:      busyBoxIP,
 				},
 			}
 
@@ -127,20 +156,37 @@ func TestTraceDns(t *testing.T) {
 				e.Runtime.ContainerID = ""
 			}
 
-			return ExpectEntriesToMatch(output, normalize, expectedEntries...)
+			compFn := func(a, b any) bool {
+				x := a.(*tracednsTypes.Event)
+				y := b.(*tracednsTypes.Event)
+				return x.Comm == y.Comm &&
+					x.Qr == y.Qr &&
+					x.Nameserver == y.Nameserver &&
+					x.PktType == y.PktType &&
+					x.DNSName == y.DNSName &&
+					x.QType == y.QType &&
+					x.Rcode == y.Rcode &&
+					x.Latency == y.Latency &&
+					x.NumAnswers == y.NumAnswers &&
+					reflect.DeepEqual(x.Addresses, y.Addresses) &&
+					x.Uid == y.Uid &&
+					x.Gid == y.Gid &&
+					x.Protocol == y.Protocol &&
+					((x.Qr == tracednsTypes.DNSPktTypeQuery &&
+						x.DstPort == y.DstPort && x.SrcIP == y.SrcIP) ||
+						(x.Qr == tracednsTypes.DNSPktTypeResponse &&
+							x.SrcPort == y.SrcPort &&
+							x.DstIP == y.DstIP))
+			}
+
+			return ExpectedEntriesToMatchCustom(output, normalize, compFn, expectedEntries...)
 		},
 	}
 
-	nslookupCmds := []string{
-		fmt.Sprintf("setuidgid 1000:1111 nslookup -type=a fake.test.com. %s", dnsServer),
-		fmt.Sprintf("setuidgid 1000:1111 nslookup -type=aaaa fake.test.com. %s", dnsServer),
-	}
-
-	commands := []*Command{
+	// Start the trace gadget and verify the output.
+	commands = []*Command{
 		CreateTestNamespaceCommand(ns),
 		traceDNSCmd,
-		BusyboxPodRepeatCommand(ns, strings.Join(nslookupCmds, " ; ")),
-		WaitUntilTestPodReadyCommand(ns),
 		DeleteTestNamespaceCommand(ns),
 	}
 

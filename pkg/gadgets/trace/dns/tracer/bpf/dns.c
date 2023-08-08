@@ -194,6 +194,16 @@ output_dns_event(struct __sk_buff *skb, union dnsflags flags, __u32 name_len, __
 	event->daddr_v4 = bpf_htonl(event->daddr_v4);
 	event->saddr_v4 = bpf_htonl(event->saddr_v4);
 
+	// Check network protocol.
+	event->proto = load_byte(skb, ETH_HLEN + offsetof(struct iphdr, protocol));
+	if (event->proto == IPPROTO_TCP) {
+		event->sport = load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct tcphdr, source));
+		event->dport = load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct tcphdr, dest));
+	} else if (event->proto == IPPROTO_UDP) {
+		event->sport = load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct udphdr, source));
+		event->dport = load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct udphdr, dest));
+	}
+
 	event->qr = flags.qr;
 
 	if (flags.qr == 1) {

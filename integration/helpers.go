@@ -35,6 +35,8 @@ var cmpIgnoreUnexported = cmpopts.IgnoreUnexported(
 	containercollection.K8sMetadata{},
 )
 
+type comparisonFn func(x, y any) bool
+
 func parseMultiJSONOutput[T any](output string, normalize func(*T)) ([]*T, error) {
 	ret := []*T{}
 
@@ -139,11 +141,11 @@ func ExpectAllInMultipleArrayToMatch[T any](output string, normalize func(*T), e
 	return expectAllToMatch(entries, expectedEntry)
 }
 
-func expectEntriesToMatch[T any](entries []*T, expectedEntries ...*T) error {
+func expectEntriesToMatch[T any](fn comparisonFn, entries []*T, expectedEntries ...*T) error {
 out:
 	for _, expectedEntry := range expectedEntries {
 		for _, entry := range entries {
-			if reflect.DeepEqual(expectedEntry, entry) {
+			if fn(expectedEntry, entry) {
 				continue out
 			}
 		}
@@ -152,14 +154,18 @@ out:
 	return nil
 }
 
-// ExpectEntriesToMatch verifies that all the entries in expectedEntries are
-// matched by at least one entry in the output (Lines of independent JSON objects).
-func ExpectEntriesToMatch[T any](output string, normalize func(*T), expectedEntries ...*T) error {
+func ExpectedEntriesToMatchCustom[T any](output string, normalize func(*T), fn comparisonFn, expectedEntries ...*T) error {
 	entries, err := parseMultiJSONOutput(output, normalize)
 	if err != nil {
 		return err
 	}
-	return expectEntriesToMatch(entries, expectedEntries...)
+	return expectEntriesToMatch(fn, entries, expectedEntries...)
+}
+
+// ExpectEntriesToMatch verifies that all the entries in expectedEntries are
+// matched by at least one entry in the output (Lines of independent JSON objects).
+func ExpectEntriesToMatch[T any](output string, normalize func(*T), expectedEntries ...*T) error {
+	return ExpectedEntriesToMatchCustom(output, normalize, reflect.DeepEqual, expectedEntries...)
 }
 
 // ExpectEntriesInArrayToMatch verifies that all the entries in expectedEntries are
@@ -169,7 +175,7 @@ func ExpectEntriesInArrayToMatch[T any](output string, normalize func(*T), expec
 	if err != nil {
 		return err
 	}
-	return expectEntriesToMatch(entries, expectedEntries...)
+	return expectEntriesToMatch(reflect.DeepEqual, entries, expectedEntries...)
 }
 
 // ExpectEntriesInMultipleArrayToMatch verifies that all the entries in expectedEntries are
@@ -179,7 +185,7 @@ func ExpectEntriesInMultipleArrayToMatch[T any](output string, normalize func(*T
 	if err != nil {
 		return err
 	}
-	return expectEntriesToMatch(entries, expectedEntries...)
+	return expectEntriesToMatch(reflect.DeepEqual, entries, expectedEntries...)
 }
 
 type CommonDataOption func(commonData *eventtypes.CommonData)

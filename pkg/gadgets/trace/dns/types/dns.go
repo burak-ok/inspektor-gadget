@@ -42,6 +42,12 @@ type Event struct {
 	Uid uint32 `json:"uid" column:"uid,template:uid,hide"`
 	Gid uint32 `json:"gid" column:"gid,template:gid,hide"`
 
+	SrcIP    string `json:"srcIP,omitempty" column:"srcIP,template:ipaddr"`
+	DstIP    string `json:"dstIP,omitempty" column:"dstIP,template:ipaddr"`
+	SrcPort  uint16 `json:"srcPort,omitempty" column:"srcPort,template:ipport"`
+	DstPort  uint16 `json:"dstPort,omitempty" column:"dstPort,template:ipport"`
+	Protocol string `json:"protocol,omitempty" column:"proto,maxWidth:5"`
+
 	ID         string        `json:"id,omitempty" column:"id,width:4,fixed,hide"`
 	Qr         DNSPktType    `json:"qr,omitempty" column:"qr,width:2,fixed"`
 	Nameserver string        `json:"nameserver,omitempty" column:"nameserver,template:ipaddr,hide"`
