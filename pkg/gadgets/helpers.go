@@ -112,24 +112,10 @@ func Htonl(hl uint32) uint32 {
 	return *(*uint32)(unsafe.Pointer(&nl[0]))
 }
 
-func Htons(nl uint16) uint16 {
-	var hl [2]byte
-	determineEndian().PutUint16(hl[:], nl)
-	return *(*uint16)(unsafe.Pointer(&hl[0]))
-}
-
-func determineEndian() binary.ByteOrder {
-	var endian binary.ByteOrder
-	buf := [2]byte{}
-	*(*uint16)(unsafe.Pointer(&buf[0])) = uint16(0xABCD)
-
-	switch buf {
-	case [2]byte{0xCD, 0xAB}:
-		endian = binary.LittleEndian
-	default:
-		endian = binary.BigEndian
-	}
-	return endian
+func Htons(hs uint16) uint16 {
+	var ns [2]byte
+	binary.BigEndian.PutUint16(ns[:], hs)
+	return *(*uint16)(unsafe.Pointer(&ns[0]))
 }
 
 func IPStringFromBytes(ipBytes [16]byte, ipType int) string {
