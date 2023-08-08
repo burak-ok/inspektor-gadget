@@ -24,7 +24,7 @@ import (
 )
 
 func newTopBlockIOCmd(ns string, cmd string, startAndStop bool) *Command {
-	expectedOutputFn := func(output string) error {
+	validateOutputFn := func(t *testing.T, output string) {
 		isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 		expectedEntry := &types.Stats{
 			CommonData: BuildCommonData(ns,
@@ -54,16 +54,21 @@ func newTopBlockIOCmd(ns string, cmd string, startAndStop bool) *Command {
 			e.Operations = 0
 
 			e.Runtime.ContainerID = ""
+
+			// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+			if isDockerRuntime {
+				e.Runtime.ContainerImageName = ""
+			}
 		}
 
-		return ExpectEntriesInMultipleArrayToMatch(output, normalize, expectedEntry)
+		ExpectEntriesInMultipleArrayToMatch(t, output, normalize, expectedEntry)
 	}
 
 	return &Command{
-		Name:             "TopBlockIO",
-		ExpectedOutputFn: expectedOutputFn,
-		Cmd:              cmd,
-		StartAndStop:     startAndStop,
+		Name:           "TopBlockIO",
+		ValidateOutput: validateOutputFn,
+		Cmd:            cmd,
+		StartAndStop:   startAndStop,
 	}
 }
 

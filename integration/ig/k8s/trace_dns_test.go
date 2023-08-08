@@ -35,16 +35,13 @@ func TestTraceDns(t *testing.T) {
 	}
 
 	RunTestSteps(commandsPreTest, t)
-	dnsServer, err := GetTestPodIP(ns, "dnstester")
-	if err != nil {
-		t.Fatalf("failed to get pod ip: %v", err)
-	}
+	dnsServer := GetTestPodIP(t, ns, "dnstester")
 
 	traceDNSCmd := &Command{
 		Name:         "TraceDns",
 		Cmd:          fmt.Sprintf("ig trace dns -o json --runtimes=%s", *containerRuntime),
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			expectedEntries := []*dnsTypes.Event{
 				{
@@ -167,9 +164,14 @@ func TestTraceDns(t *testing.T) {
 				}
 
 				e.Runtime.ContainerID = ""
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if isDockerRuntime {
+					e.Runtime.ContainerImageName = ""
+				}
 			}
 
-			return ExpectEntriesToMatch(output, normalize, expectedEntries...)
+			ExpectEntriesToMatch(t, output, normalize, expectedEntries...)
 		},
 	}
 
@@ -202,16 +204,13 @@ func TestTraceDnsHost(t *testing.T) {
 	}
 
 	RunTestSteps(commandsPreTest, t)
-	dnsServer, err := GetTestPodIP(ns, "dnstester")
-	if err != nil {
-		t.Fatalf("failed to get pod ip: %v", err)
-	}
+	dnsServer := GetTestPodIP(t, ns, "dnstester")
 
 	traceDNSCmd := &Command{
 		Name:         "TraceDnsHost",
 		Cmd:          "ig trace dns -o json --host",
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			expectedEntries := []*dnsTypes.Event{
 				{
 					Event: eventtypes.Event{
@@ -264,7 +263,7 @@ func TestTraceDnsHost(t *testing.T) {
 				}
 			}
 
-			return ExpectEntriesToMatch(output, normalize, expectedEntries...)
+			ExpectEntriesToMatch(t, output, normalize, expectedEntries...)
 		},
 	}
 

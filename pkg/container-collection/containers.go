@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/moby/moby/pkg/stringid"
 	ocispec "github.com/opencontainers/runtime-spec/specs-go"
 	"golang.org/x/sys/unix"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -200,12 +201,22 @@ func ownerReferenceEnrichment(
 func GetColumns() *columns.Columns[Container] {
 	cols := columns.MustCreateColumns[Container]()
 
-	// Display the runtime name and container ID when listing containers
+	// Display the runtime name, container ID and image name when listing containers
 	col, _ := cols.GetColumn("runtime.containerId")
 	col.Visible = true
 
 	col, _ = cols.GetColumn("runtime.runtimeName")
 	col.Visible = true
+
+	col, _ = cols.GetColumn("runtime.containerImageName")
+	col.Visible = true
+
+	cols.MustSetExtractor("runtime.containerImageName", func(container *Container) string {
+		if strings.Contains(container.Runtime.ContainerImageName, "sha256") {
+			return stringid.TruncateID(container.Runtime.ContainerImageName)
+		}
+		return container.Runtime.ContainerImageName
+	})
 
 	return cols
 }

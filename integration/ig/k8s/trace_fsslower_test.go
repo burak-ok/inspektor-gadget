@@ -34,7 +34,7 @@ func TestTraceFsslower(t *testing.T) {
 		Name:         "TraceFsslower",
 		Cmd:          fmt.Sprintf("ig trace fsslower -f %s --runtimes=%s -m 0 -o json", fsType, *containerRuntime),
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			expectedEntry := &fsslowerTypes.Event{
 				Event: BuildBaseEvent(ns,
@@ -64,9 +64,14 @@ func TestTraceFsslower(t *testing.T) {
 				e.Latency = 0
 
 				e.Runtime.ContainerID = ""
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if isDockerRuntime {
+					e.Runtime.ContainerImageName = ""
+				}
 			}
 
-			return ExpectEntriesToMatch(output, normalize, expectedEntry)
+			ExpectEntriesToMatch(t, output, normalize, expectedEntry)
 		},
 	}
 

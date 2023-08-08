@@ -35,21 +35,14 @@ func TestTraceNetwork(t *testing.T) {
 	}
 
 	RunTestSteps(commandsPreTest, t)
-	nginxIP, err := GetTestPodIP(ns, "nginx-pod")
-	if err != nil {
-		t.Fatalf("failed to get pod ip %s", err)
-	}
+	nginxIP := GetTestPodIP(t, ns, "nginx-pod")
 
 	traceNetworkCmd := &Command{
 		Name:         "TraceNetwork",
 		Cmd:          fmt.Sprintf("ig trace network -o json --runtimes=%s", *containerRuntime),
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
-			testPodIP, err := GetTestPodIP(ns, "test-pod")
-			if err != nil {
-				return fmt.Errorf("getting pod ip: %w", err)
-			}
-
+		ValidateOutput: func(t *testing.T, output string) {
+			testPodIP := GetTestPodIP(t, ns, "test-pod")
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			expectedEntries := []*networkTypes.Event{
 				{
@@ -120,9 +113,14 @@ func TestTraceNetwork(t *testing.T) {
 				e.Tid = 0
 
 				e.Runtime.ContainerID = ""
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if isDockerRuntime {
+					e.Runtime.ContainerImageName = ""
+				}
 			}
 
-			return ExpectEntriesToMatch(output, normalize, expectedEntries...)
+			ExpectEntriesToMatch(t, output, normalize, expectedEntries...)
 		},
 	}
 

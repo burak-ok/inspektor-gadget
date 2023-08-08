@@ -33,7 +33,7 @@ func TestTraceMount(t *testing.T) {
 		Name:         "TraceMount",
 		Cmd:          fmt.Sprintf("ig trace mount -o json --runtimes=%s", *containerRuntime),
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			expectedEntry := &mountTypes.Event{
 				Event: BuildBaseEvent(ns,
@@ -66,9 +66,14 @@ func TestTraceMount(t *testing.T) {
 				e.Fs = ""
 
 				e.Runtime.ContainerID = ""
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if isDockerRuntime {
+					e.Runtime.ContainerImageName = ""
+				}
 			}
 
-			return ExpectEntriesToMatch(output, normalize, expectedEntry)
+			ExpectEntriesToMatch(t, output, normalize, expectedEntry)
 		},
 	}
 

@@ -26,12 +26,12 @@ import (
 func newListContainerTestStep(
 	cmd string,
 	cn, pod, podUID, ns, runtime, runtimeContainerName string,
-	verifyOutput func(string, func(*containercollection.Container), *containercollection.Container) error,
+	verifyOutput func(*testing.T, string, func(*containercollection.Container), *containercollection.Container),
 ) *Command {
 	return &Command{
 		Name: "RunListContainers",
 		Cmd:  cmd,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			expectedContainer := &containercollection.Container{
 				K8s: containercollection.K8sMetadata{
 					BasicK8sMetadata: types.BasicK8sMetadata{
@@ -50,7 +50,7 @@ func newListContainerTestStep(
 				},
 			}
 
-			// TODO: Handle once we support getting ContainerImageName from docker
+			// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			if isDockerRuntime {
 				expectedContainer.Runtime.ContainerImageName = ""
@@ -69,9 +69,14 @@ func newListContainerTestStep(
 
 				c.K8s.PodLabels = nil
 				c.Runtime.ContainerID = ""
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if isDockerRuntime {
+					c.Runtime.ContainerImageName = ""
+				}
 			}
 
-			return verifyOutput(output, normalize, expectedContainer)
+			verifyOutput(t, output, normalize, expectedContainer)
 		},
 	}
 }
@@ -97,10 +102,7 @@ func TestListContainers(t *testing.T) {
 	}
 	RunTestSteps(commands, t, WithCbBeforeCleanup(PrintLogsFn(ns)))
 
-	podUID, err := GetPodUID(ns, pod)
-	if err != nil {
-		t.Fatalf("getting pod UID: %s", err)
-	}
+	podUID := GetPodUID(t, ns, pod)
 
 	// Containerd name the container with the Kubernetes container name, while
 	// Docker and CRI-O use a composed name.
@@ -116,8 +118,8 @@ func TestListContainers(t *testing.T) {
 		listContainerTestStep := newListContainerTestStep(
 			fmt.Sprintf("ig list-containers -o json --runtimes=%s", *containerRuntime),
 			cn, pod, podUID, ns, *containerRuntime, runtimeContainerName,
-			func(o string, f func(*containercollection.Container), c *containercollection.Container) error {
-				return ExpectEntriesInArrayToMatch(o, f, c)
+			func(t *testing.T, o string, f func(*containercollection.Container), c *containercollection.Container) {
+				ExpectEntriesInArrayToMatch(t, o, f, c)
 			},
 		)
 		RunTestSteps([]*Command{listContainerTestStep}, t, WithCbBeforeCleanup(PrintLogsFn(ns)))
@@ -129,8 +131,8 @@ func TestListContainers(t *testing.T) {
 		listContainerTestStep := newListContainerTestStep(
 			fmt.Sprintf("ig list-containers -o json --runtimes=%s --containername=%s", *containerRuntime, runtimeContainerName),
 			cn, pod, podUID, ns, *containerRuntime, runtimeContainerName,
-			func(o string, f func(*containercollection.Container), c *containercollection.Container) error {
-				return ExpectAllInArrayToMatch(o, f, c)
+			func(t *testing.T, o string, f func(*containercollection.Container), c *containercollection.Container) {
+				ExpectAllInArrayToMatch(t, o, f, c)
 			},
 		)
 		RunTestSteps([]*Command{listContainerTestStep}, t, WithCbBeforeCleanup(PrintLogsFn(ns)))
@@ -149,7 +151,7 @@ func TestWatchCreatedContainers(t *testing.T) {
 		// TODO: Filter by namespace once we support it.
 		Cmd:          fmt.Sprintf("ig list-containers -o json --runtimes=%s --watch", *containerRuntime),
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			expectedEvent := &containercollection.PubSubEvent{
 				Type: containercollection.EventTypeAddContainer,
@@ -171,7 +173,7 @@ func TestWatchCreatedContainers(t *testing.T) {
 				},
 			}
 
-			// TODO: Handle it once we support getting container image name for docker.
+			// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
 			if isDockerRuntime {
 				expectedEvent.Container.Runtime.ContainerImageName = ""
 			}
@@ -202,12 +204,17 @@ func TestWatchCreatedContainers(t *testing.T) {
 					e.Container.Runtime.RuntimeName == ContainerRuntimeCRIO {
 					e.Container.Runtime.ContainerName = cn
 				}
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if e.Container.Runtime.RuntimeName == ContainerRuntimeDocker {
+					e.Container.Runtime.ContainerImageName = ""
+				}
 			}
 
 			// Watching containers is a command that needs to be started before
 			// the container is created, so we can't filter by container name
 			// neither use ExpectAllInArrayToMatch here.
-			return ExpectEntriesToMatch(output, normalize, expectedEvent)
+			ExpectEntriesToMatch(t, output, normalize, expectedEvent)
 		},
 	}
 
@@ -233,7 +240,7 @@ func TestWatchDeletedContainers(t *testing.T) {
 		Name:         "RunWatchContainers",
 		Cmd:          fmt.Sprintf("ig list-containers -o json --runtimes=%s --watch", *containerRuntime),
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			expectedEvent := &containercollection.PubSubEvent{
 				Type: containercollection.EventTypeRemoveContainer,
 				Container: &containercollection.Container{
@@ -254,7 +261,7 @@ func TestWatchDeletedContainers(t *testing.T) {
 				},
 			}
 
-			// TODO: Handle once we support getting containerImageName from Docker
+			// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			if isDockerRuntime {
 				expectedEvent.Container.Runtime.ContainerImageName = ""
@@ -286,12 +293,17 @@ func TestWatchDeletedContainers(t *testing.T) {
 					e.Container.Runtime.RuntimeName == ContainerRuntimeCRIO {
 					e.Container.Runtime.ContainerName = cn
 				}
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if e.Container.Runtime.RuntimeName == ContainerRuntimeDocker {
+					e.Container.Runtime.ContainerImageName = ""
+				}
 			}
 
 			// Watching containers is a command that needs to be started before
 			// the container is created, so we can't filter by container name
 			// neither use ExpectAllInArrayToMatch here.
-			return ExpectEntriesToMatch(output, normalize, expectedEvent)
+			ExpectEntriesToMatch(t, output, normalize, expectedEvent)
 		},
 	}
 
@@ -320,7 +332,7 @@ func TestPodWithSecurityContext(t *testing.T) {
 		Name:         "RunWatchContainers",
 		Cmd:          fmt.Sprintf("ig list-containers -o json --runtimes=%s --watch", *containerRuntime),
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			expectedEvent := &containercollection.PubSubEvent{
 				Type: containercollection.EventTypeAddContainer,
@@ -342,7 +354,7 @@ func TestPodWithSecurityContext(t *testing.T) {
 				},
 			}
 
-			// TODO: Handle it once we support getting container image name for docker.
+			// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
 			if isDockerRuntime {
 				expectedEvent.Container.Runtime.ContainerImageName = ""
 			}
@@ -373,12 +385,17 @@ func TestPodWithSecurityContext(t *testing.T) {
 					e.Container.Runtime.RuntimeName == ContainerRuntimeCRIO {
 					e.Container.Runtime.ContainerName = cn
 				}
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if e.Container.Runtime.RuntimeName == ContainerRuntimeDocker {
+					e.Container.Runtime.ContainerImageName = ""
+				}
 			}
 
 			// Watching containers is a command that needs to be started before
 			// the container is created, so we can't filter by container name
 			// neither use ExpectAllInArrayToMatch here.
-			return ExpectEntriesToMatch(output, normalize, expectedEvent)
+			ExpectEntriesToMatch(t, output, normalize, expectedEvent)
 		},
 	}
 

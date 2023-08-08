@@ -31,7 +31,7 @@ func TestTraceCapabilities(t *testing.T) {
 		Name:         "TraceCapabilities",
 		Cmd:          fmt.Sprintf("ig trace capabilities -o json --runtimes=%s", *containerRuntime),
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			expectedEntry := &capabilitiesTypes.Event{
 				Event: BuildBaseEvent(ns,
@@ -81,9 +81,14 @@ func TestTraceCapabilities(t *testing.T) {
 				}
 
 				e.Runtime.ContainerID = ""
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if isDockerRuntime {
+					e.Runtime.ContainerImageName = ""
+				}
 			}
 
-			return ExpectEntriesToMatch(output, normalize, expectedEntry)
+			ExpectEntriesToMatch(t, output, normalize, expectedEntry)
 		},
 	}
 

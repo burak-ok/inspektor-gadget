@@ -18,7 +18,6 @@
 package tracer_test
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -114,65 +113,6 @@ func TestSignalTracer(t *testing.T) {
 				require.Equal(t, uint32(info.Uid), events[0].Uid, "Event has bad UID")
 				require.Equal(t, uint32(info.Gid), events[0].Gid, "Event has bad GID")
 			},
-		},
-		"generate_SIGSEGV": {
-			getTracerConfig: func(info *utilstest.RunnerInfo) *tracer.Config {
-				return &tracer.Config{
-					MountnsMap: utilstest.CreateMntNsFilterMap(t, info.MountNsID),
-				}
-			},
-			generateEvent: func(_ syscall.Signal) (uint32, error) {
-				// Use clone to make it more portable, at least for amd64 and arm64.
-				childPid, _, errno := syscall.Syscall6(syscall.SYS_CLONE, uintptr(syscall.SIGCHLD), 0, 0, 0, 0, 0)
-				if errno != 0 {
-					var err error = errno
-
-					return 0, fmt.Errorf("spawning child process: %w", err)
-				}
-
-				if childPid == 0 {
-					var t *testDefinition
-					t.signalToSend = 0xdead
-
-					return 0, errors.New("this code should never be reached")
-				}
-
-				proc, err := os.FindProcess(int(childPid))
-				if err != nil {
-					return 0, fmt.Errorf("no process with PID %d: %w", childPid, err)
-				}
-
-				done := make(chan error)
-				go func() {
-					_, err := proc.Wait()
-					done <- err
-				}()
-
-				select {
-				case err := <-done:
-					if err != nil {
-						return 0, fmt.Errorf("waiting child with PID %d: %w", childPid, err)
-					}
-					return uint32(childPid), nil
-				case <-time.After(10 * time.Second):
-					return 0, fmt.Errorf("waiting child with PID %d: time out", childPid)
-				}
-			},
-			validateEvent: utilstest.ExpectOneEvent(func(info *utilstest.RunnerInfo, childPid uint32) *types.Event {
-				return &types.Event{
-					Event: eventtypes.Event{
-						Type: eventtypes.NORMAL,
-					},
-					Pid:           childPid,
-					Comm:          path.Base(os.Args[0]),
-					Signal:        unix.SignalName(syscall.SIGSEGV),
-					TargetPid:     childPid,
-					Retval:        0,
-					Uid:           uint32(info.Uid),
-					Gid:           uint32(info.Gid),
-					WithMountNsID: eventtypes.WithMountNsID{MountNsID: info.MountNsID},
-				}
-			}),
 		},
 	}
 

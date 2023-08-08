@@ -31,7 +31,7 @@ func TestTraceBind(t *testing.T) {
 		Name:         "TraceBind",
 		Cmd:          fmt.Sprintf("ig trace bind -o json --runtimes=%s", *containerRuntime),
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			expectedEntry := &bindTypes.Event{
 				Event: BuildBaseEvent(ns,
@@ -60,11 +60,16 @@ func TestTraceBind(t *testing.T) {
 				e.MountNsID = 0
 
 				e.Runtime.ContainerID = ""
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if isDockerRuntime {
+					e.Runtime.ContainerImageName = ""
+				}
 			}
 
 			// Since we aren't doing any filtering in traceBindCmd we avoid using ExpectAllToMatch
 			// Issue: https://github.com/inspektor-gadget/inspektor-gadget/issues/644
-			return ExpectEntriesToMatch(output, normalize, expectedEntry)
+			ExpectEntriesToMatch(t, output, normalize, expectedEntry)
 		},
 	}
 

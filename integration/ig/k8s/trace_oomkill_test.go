@@ -31,7 +31,7 @@ func TestTraceOOMKill(t *testing.T) {
 		Name:         "TraceOomkill",
 		Cmd:          fmt.Sprintf("ig trace oomkill -o json --runtimes=%s", *containerRuntime),
 		StartAndStop: true,
-		ExpectedOutputFn: func(output string) error {
+		ValidateOutput: func(t *testing.T, output string) {
 			isDockerRuntime := *containerRuntime == ContainerRuntimeDocker
 			expectedEntry := &oomkillTypes.Event{
 				Event: BuildBaseEvent(ns,
@@ -61,9 +61,14 @@ func TestTraceOOMKill(t *testing.T) {
 				e.MountNsID = 0
 
 				e.Runtime.ContainerID = ""
+
+				// Docker can provide different values for ContainerImageName. See `getContainerImageNamefromImage`
+				if isDockerRuntime {
+					e.Runtime.ContainerImageName = ""
+				}
 			}
 
-			return ExpectAllToMatch(output, normalize, expectedEntry)
+			ExpectAllToMatch(t, output, normalize, expectedEntry)
 		},
 	}
 
