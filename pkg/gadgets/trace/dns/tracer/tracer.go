@@ -215,23 +215,23 @@ func bpfEventToDNSEvent(bpfEvent *dnsEventT, netns uint64) (*types.Event, error)
 	event.ID = fmt.Sprintf("%.4x", bpfEvent.Id)
 
 	if bpfEvent.Af == syscall.AF_INET {
-		event.SrcIP = gadgets.IPStringFromBytes(bpfEvent.SaddrV6, 4)
-		event.DstIP = gadgets.IPStringFromBytes(bpfEvent.DaddrV6, 4)
+		event.SrcEndpoint.Addr = gadgets.IPStringFromBytes(bpfEvent.SaddrV6, 4)
+		event.DstEndpoint.Addr = gadgets.IPStringFromBytes(bpfEvent.DaddrV6, 4)
 	} else if bpfEvent.Af == syscall.AF_INET6 {
-		event.SrcIP = gadgets.IPStringFromBytes(bpfEvent.SaddrV6, 6)
-		event.DstIP = gadgets.IPStringFromBytes(bpfEvent.DaddrV6, 6)
+		event.SrcEndpoint.Addr = gadgets.IPStringFromBytes(bpfEvent.SaddrV6, 6)
+		event.DstEndpoint.Addr = gadgets.IPStringFromBytes(bpfEvent.DaddrV6, 6)
 	}
 
 	if bpfEvent.Qr == 1 {
 		event.Qr = types.DNSPktTypeResponse
-		event.Nameserver = event.SrcIP
+		event.Nameserver = event.SrcEndpoint.Addr
 	} else {
 		event.Qr = types.DNSPktTypeQuery
-		event.Nameserver = event.DstIP
+		event.Nameserver = event.DstEndpoint.Addr
 	}
 
-	event.SrcPort = bpfEvent.Sport
-	event.DstPort = bpfEvent.Dport
+	event.SrcEndpoint.Port = bpfEvent.Sport
+	event.DstEndpoint.Port = bpfEvent.Dport
 	event.Protocol = gadgets.ProtoString(int(bpfEvent.Proto))
 
 	// Convert name into a string with dots

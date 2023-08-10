@@ -42,11 +42,9 @@ type Event struct {
 	Uid uint32 `json:"uid" column:"uid,template:uid,hide"`
 	Gid uint32 `json:"gid" column:"gid,template:gid,hide"`
 
-	SrcIP    string `json:"srcIP,omitempty" column:"srcIP,template:ipaddr"`
-	DstIP    string `json:"dstIP,omitempty" column:"dstIP,template:ipaddr"`
-	SrcPort  uint16 `json:"srcPort,omitempty" column:"srcPort,template:ipport"`
-	DstPort  uint16 `json:"dstPort,omitempty" column:"dstPort,template:ipport"`
-	Protocol string `json:"protocol,omitempty" column:"proto,maxWidth:5"`
+	SrcEndpoint eventtypes.L4Endpoint `json:"src,omitempty" column:"src"`
+	DstEndpoint eventtypes.L4Endpoint `json:"dst,omitempty" column:"dst"`
+	Protocol    string                `json:"protocol,omitempty" column:"proto,maxWidth:5"`
 
 	ID         string        `json:"id,omitempty" column:"id,width:4,fixed,hide"`
 	Qr         DNSPktType    `json:"qr,omitempty" column:"qr,width:2,fixed"`
@@ -58,6 +56,10 @@ type Event struct {
 	Latency    time.Duration `json:"latency,omitempty" column:"latency,hide"`
 	NumAnswers int           `json:"numAnswers,omitempty" column:"numAnswers,width:8,maxWidth:8" columnDesc:"Number of addresses contained in the response."`
 	Addresses  []string      `json:"addresses,omitempty" column:"addresses,width:32,hide" columnDesc:"Addresses in the response. Maximum 8 are reported. Only available if the response is compressed."`
+}
+
+func (e *Event) GetEndpoints() []*eventtypes.L3Endpoint {
+	return []*eventtypes.L3Endpoint{&e.SrcEndpoint.L3Endpoint, &e.DstEndpoint.L3Endpoint}
 }
 
 func GetColumns() *columns.Columns[Event] {
@@ -90,6 +92,27 @@ func GetColumns() *columns.Columns[Event] {
 	cols.MustSetExtractor("addresses", func(event *Event) string {
 		return strings.Join(event.Addresses, ",")
 	})
+
+	eventtypes.MustAddVirtualL4EndpointColumn(
+		cols,
+		columns.Attributes{
+			Name:     "src",
+			Visible:  false,
+			Template: "ipaddrport",
+			Order:    2000,
+		},
+		func(e *Event) eventtypes.L4Endpoint { return e.SrcEndpoint },
+	)
+	eventtypes.MustAddVirtualL4EndpointColumn(
+		cols,
+		columns.Attributes{
+			Name:     "dst",
+			Visible:  false,
+			Template: "ipaddrport",
+			Order:    3000,
+		},
+		func(e *Event) eventtypes.L4Endpoint { return e.DstEndpoint },
+	)
 
 	return cols
 }
