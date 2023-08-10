@@ -23,12 +23,17 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
 
+	containercollection "github.com/inspektor-gadget/inspektor-gadget/pkg/container-collection"
 	eventtypes "github.com/inspektor-gadget/inspektor-gadget/pkg/types"
 )
 
-type comparisonFn func(x, y any) bool
+var cmpIgnoreUnexported = cmpopts.IgnoreUnexported(
+	containercollection.Container{},
+	containercollection.K8sMetadata{},
+)
 
 func parseMultiJSONOutput[T any](t *testing.T, output string, normalize func(*T)) []*T {
 	ret := []*T{}
@@ -114,11 +119,11 @@ func ExpectAllInMultipleArrayToMatch[T any](t *testing.T, output string, normali
 	expectAllToMatch(t, entries, expectedEntry)
 }
 
-func expectEntriesToMatch[T any](t *testing.T, fn comparisonFn, entries []*T, expectedEntries ...*T) {
+func expectEntriesToMatch[T any](t *testing.T, entries []*T, expectedEntries ...*T) {
 out:
 	for _, expectedEntry := range expectedEntries {
 		for _, entry := range entries {
-			if fn(expectedEntry, entry) {
+			if reflect.DeepEqual(expectedEntry, entry) {
 				continue out
 			}
 		}
@@ -126,29 +131,25 @@ out:
 	}
 }
 
-func ExpectedEntriesToMatchCustom[T any](t *testing.T, output string, normalize func(*T), fn comparisonFn, expectedEntries ...*T) {
-	entries := parseMultiJSONOutput(t, output, normalize)
-	expectEntriesToMatch(t, fn, entries, expectedEntries...)
-}
-
 // ExpectEntriesToMatch verifies that all the entries in expectedEntries are
 // matched by at least one entry in the output (Lines of independent JSON objects).
 func ExpectEntriesToMatch[T any](t *testing.T, output string, normalize func(*T), expectedEntries ...*T) {
-	ExpectedEntriesToMatchCustom(t, output, normalize, reflect.DeepEqual, expectedEntries...)
+	entries := parseMultiJSONOutput(t, output, normalize)
+	expectEntriesToMatch(t, entries, expectedEntries...)
 }
 
 // ExpectEntriesInArrayToMatch verifies that all the entries in expectedEntries are
 // matched by at least one entry in the output (JSON array of JSON objects).
 func ExpectEntriesInArrayToMatch[T any](t *testing.T, output string, normalize func(*T), expectedEntries ...*T) {
 	entries := parseJSONArrayOutput(t, output, normalize)
-	expectEntriesToMatch(t, reflect.DeepEqual, entries, expectedEntries...)
+	expectEntriesToMatch(t, entries, expectedEntries...)
 }
 
 // ExpectEntriesInMultipleArrayToMatch verifies that all the entries in expectedEntries are
 // matched by at least one entry in the output (multiple JSON array of JSON objects separated by newlines).
 func ExpectEntriesInMultipleArrayToMatch[T any](t *testing.T, output string, normalize func(*T), expectedEntries ...*T) {
 	entries := parseMultipleJSONArrayOutput(t, output, normalize)
-	expectEntriesToMatch(t, reflect.DeepEqual, entries, expectedEntries...)
+	expectEntriesToMatch(t, entries, expectedEntries...)
 }
 
 type CommonDataOption func(commonData *eventtypes.CommonData)

@@ -230,8 +230,8 @@ func bpfEventToDNSEvent(bpfEvent *dnsEventT, netns uint64) (*types.Event, error)
 		event.Nameserver = event.DstIP
 	}
 
-	event.SrcPort = gadgets.Htons(bpfEvent.Sport)
-	event.DstPort = gadgets.Htons(bpfEvent.Dport)
+	event.SrcPort = bpfEvent.Sport
+	event.DstPort = bpfEvent.Dport
 	event.Protocol = gadgets.ProtoString(int(bpfEvent.Proto))
 
 	// Convert name into a string with dots

@@ -211,11 +211,11 @@ static __always_inline int output_dns_event(struct __sk_buff *skb,
 	// Check network protocol.
 	event->proto = load_byte(skb, ETH_HLEN + offsetof(struct iphdr, protocol));
 	if (event->proto == IPPROTO_TCP) {
-		event->sport = bpf_htons(load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct tcphdr, source)));
-		event->dport = bpf_htons(load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct tcphdr, dest)));
+		event->sport = load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct tcphdr, source));
+		event->dport = load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct tcphdr, dest));
 	} else if (event->proto == IPPROTO_UDP) {
-		event->sport = bpf_htons(load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct udphdr, source)));
-		event->dport = bpf_htons(load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct udphdr, dest)));
+		event->sport = load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct udphdr, source));
+		event->dport = load_half(skb, ETH_HLEN + sizeof(struct iphdr) + offsetof(struct udphdr, dest));
 	}
 	
 	event->qr = flags.qr;

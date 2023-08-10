@@ -16,7 +16,6 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -38,10 +37,16 @@ func TestTraceDns(t *testing.T) {
 		PodCommand("dnstester", *dnsTesterImage, ns, "", ""),
 		WaitUntilPodReadyCommand(ns, "dnstester"),
 	}
+	RunTestSteps(commandsPreTest, t, WithCbBeforeCleanup(PrintLogsFn(ns)))
 
-	RunTestSteps(commandsPreTest, t)
+	t.Cleanup(func() {
+		commands := []*Command{
+			DeleteTestNamespaceCommand(ns),
+		}
+		RunTestSteps(commands, t, WithCbBeforeCleanup(PrintLogsFn(ns)))
+	})
+
 	dnsServer := GetTestPodIP(t, ns, "dnstester")
-
 	nslookupCmds := []string{
 		fmt.Sprintf("setuidgid 1000:1111 nslookup -type=a fake.test.com. %s", dnsServer),
 		fmt.Sprintf("setuidgid 1000:1111 nslookup -type=aaaa fake.test.com. %s", dnsServer),
@@ -52,9 +57,9 @@ func TestTraceDns(t *testing.T) {
 		BusyboxPodRepeatCommand(ns, strings.Join(nslookupCmds, " ; ")),
 		WaitUntilTestPodReadyCommand(ns),
 	}
-	RunTestSteps(commands, t)
-	busyBoxIP := GetTestPodIP(t, ns, "test-pod")
+	RunTestSteps(commands, t, WithCbBeforeCleanup(PrintLogsFn(ns)))
 
+	busyBoxIP := GetTestPodIP(t, ns, "test-pod")
 	traceDNSCmd := &Command{
 		Name:         "StartTraceDnsGadget",
 		Cmd:          fmt.Sprintf("$KUBECTL_GADGET trace dns -n %s -o json", ns),
@@ -71,7 +76,7 @@ func TestTraceDns(t *testing.T) {
 					QType:      "A",
 					Uid:        1000,
 					Gid:        1111,
-					Protocol:   "udp",
+					Protocol:   "UDP",
 					DstPort:    53,
 					SrcIP:      busyBoxIP,
 				},
@@ -89,7 +94,7 @@ func TestTraceDns(t *testing.T) {
 					Addresses:  []string{"127.0.0.1"},
 					Uid:        1000,
 					Gid:        1111,
-					Protocol:   "udp",
+					Protocol:   "UDP",
 					SrcPort:    53,
 					DstIP:      busyBoxIP,
 				},
@@ -103,7 +108,7 @@ func TestTraceDns(t *testing.T) {
 					QType:      "AAAA",
 					Uid:        1000,
 					Gid:        1111,
-					Protocol:   "udp",
+					Protocol:   "UDP",
 					DstPort:    53,
 					SrcIP:      busyBoxIP,
 				},
@@ -121,7 +126,7 @@ func TestTraceDns(t *testing.T) {
 					Addresses:  []string{"::1"},
 					Uid:        1000,
 					Gid:        1111,
-					Protocol:   "udp",
+					Protocol:   "UDP",
 					SrcPort:    53,
 					DstIP:      busyBoxIP,
 				},
@@ -145,39 +150,23 @@ func TestTraceDns(t *testing.T) {
 				e.Runtime.RuntimeName = ""
 				e.Runtime.ContainerName = ""
 				e.Runtime.ContainerID = ""
+
+				if e.Qr == tracednsTypes.DNSPktTypeResponse {
+					e.DstPort = 0
+					e.SrcIP = ""
+				} else {
+					e.SrcPort = 0
+					e.DstIP = ""
+				}
 			}
 
-			compFn := func(a, b any) bool {
-				x := a.(*tracednsTypes.Event)
-				y := b.(*tracednsTypes.Event)
-				return x.Comm == y.Comm &&
-					x.Qr == y.Qr &&
-					x.Nameserver == y.Nameserver &&
-					x.PktType == y.PktType &&
-					x.DNSName == y.DNSName &&
-					x.QType == y.QType &&
-					x.Rcode == y.Rcode &&
-					x.Latency == y.Latency &&
-					x.NumAnswers == y.NumAnswers &&
-					reflect.DeepEqual(x.Addresses, y.Addresses) &&
-					x.Uid == y.Uid &&
-					x.Gid == y.Gid &&
-					x.Protocol == y.Protocol &&
-					((x.Qr == tracednsTypes.DNSPktTypeQuery &&
-						x.DstPort == y.DstPort && x.SrcIP == y.SrcIP) ||
-						(x.Qr == tracednsTypes.DNSPktTypeResponse &&
-							x.SrcPort == y.SrcPort &&
-							x.DstIP == y.DstIP))
-			}
-			ExpectedEntriesToMatchCustom(t, output, normalize, compFn, expectedEntries...)
+			ExpectEntriesToMatch(t, output, normalize, expectedEntries...)
 		},
 	}
 
 	// Start the trace gadget and verify the output.
 	commands = []*Command{
-		CreateTestNamespaceCommand(ns),
 		traceDNSCmd,
-		DeleteTestNamespaceCommand(ns),
 	}
 
 	RunTestSteps(commands, t, WithCbBeforeCleanup(PrintLogsFn(ns)))

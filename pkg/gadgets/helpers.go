@@ -312,9 +312,9 @@ func ProtoString(proto int) string {
 	protoStr := fmt.Sprintf("UNKNOWN#%d", proto)
 	switch proto {
 	case 6:
-		protoStr = "tcp"
+		protoStr = "TCP"
 	case 17:
-		protoStr = "udp"
+		protoStr = "UDP"
 	}
 	return protoStr
 }

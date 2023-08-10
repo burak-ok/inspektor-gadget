@@ -69,6 +69,13 @@ func GetColumns() *columns.Columns[Event] {
 		col.Visible = false
 	}
 
+	optional := []string{"srcIP", "dstIP", "srcPort", "dstPort", "protocol"}
+	for _, name := range optional {
+		if col, ok := cols.GetColumn(name); ok {
+			col.Visible = false
+		}
+	}
+
 	cols.MustSetExtractor("latency", func(event *Event) string {
 		if event.Latency > 0 {
 			return event.Latency.String()
