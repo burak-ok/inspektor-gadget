@@ -1,6 +1,6 @@
 module github.com/inspektor-gadget/inspektor-gadget
 
-go 1.24.0
+go 1.24.3
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
@@ -36,7 +36,7 @@ require (
 	github.com/packetcap/go-pcap v0.0.0-20250723190045-d00b185f30b7
 	github.com/prometheus/client_golang v1.23.2
 	github.com/s3rj1k/go-fanotify/fanotify v0.0.0-20210917134616-9c00a300bb7a
-	github.com/seccomp/libseccomp-golang v0.11.0 // indirect
+	github.com/seccomp/libseccomp-golang v0.11.1 // indirect
 	github.com/sigstore/sigstore v1.9.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.10.1
@@ -76,7 +76,7 @@ require (
 	k8s.io/kubelet v0.34.2
 	oras.land/oras-go/v2 v2.6.0
 	sigs.k8s.io/controller-runtime v0.21.0 // indirect
-	sigs.k8s.io/security-profiles-operator v0.9.1
+	sigs.k8s.io/security-profiles-operator v0.10.0
 	sigs.k8s.io/yaml v1.6.0
 )
 
@@ -125,7 +125,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
-	github.com/google/go-containerregistry v0.20.3 // indirect
+	github.com/google/go-containerregistry v0.20.6 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
@@ -179,7 +179,7 @@ require (
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.60.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.7.1 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
@@ -187,7 +187,7 @@ require (
 	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/oauth2 v0.32.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
+	google.golang.org/genproto v0.0.0-20250505200425-f936aa4a68b2 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251022142026-3a174f9686a8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251022142026-3a174f9686a8 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
@@ -200,7 +200,7 @@ require (
 	sigs.k8s.io/kustomize/api v0.20.1 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.20.1 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
-	sigs.k8s.io/release-utils v0.11.1 // indirect
+	sigs.k8s.io/release-utils v0.12.1 // indirect
 )
 
 require github.com/in-toto/in-toto-golang v0.9.0
