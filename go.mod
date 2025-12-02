@@ -1,6 +1,6 @@
 module github.com/inspektor-gadget/inspektor-gadget
 
-go 1.24.0
+go 1.24.3
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
@@ -8,7 +8,7 @@ require (
 	github.com/cloudflare/cbpfc v0.0.0-20240920015331-ff978e94500b
 	github.com/containerd/containerd v1.7.29
 	github.com/containerd/errdefs v1.0.0
-	github.com/containerd/nri v0.9.0
+	github.com/containerd/nri v0.10.0
 	github.com/containers/common v0.64.2
 	github.com/containers/image/v5 v5.36.2
 	github.com/coreos/go-systemd/v22 v22.6.0
