@@ -14,7 +14,7 @@ updates:
     directories:
       - "**/*"
     exclude-paths:
-      - "tools/eks-cleanup/**"
+      - "/tools/eks-cleanup/"
     schedule:
       interval: "daily"
       time: "05:00"
@@ -40,7 +40,7 @@ updates:
           - "github.com/containers/*"
   # Weekly only for /tools/eks-cleanup
   - package-ecosystem: "gomod"
-    directory: "/tools/eks-cleanup/**"
+    directory: "/tools/eks-cleanup"
     schedule:
       interval: "weekly"
       time: "05:00"
